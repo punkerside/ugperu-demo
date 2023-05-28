@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-application
+  namespace: default
+  labels:
+    app: test-application
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: test-application
+  template:
+    metadata:
+      labels:
+        app: test-application
+    spec:
+      automountServiceAccountToken: false
+      containers:
+      - name: test-application
+        image: punkerside/titan-image-load:5100688419
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 3
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 3
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "64Mi"
+          limits:
+            cpu: "100m"
+            memory: "64Mi"
