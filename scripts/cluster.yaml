@@ -1,0 +1,34 @@
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: ugperu-dev
+  version: "1.27"
+  region: us-east-1
+
+vpc:
+  cidr: 10.0.0.0/16
+  autoAllocateIPv6: false
+  clusterEndpoints:
+    publicAccess: true
+    privateAccess: false
+  nat:
+    gateway: HighlyAvailable
+
+managedNodeGroups:
+  - name: default
+    amiFamily: AmazonLinux2
+    instanceType: c6a.16xlarge
+    spot: true
+    desiredCapacity: 1
+    minSize: 1
+    maxSize: 2
+    volumeSize: 1024
+    ebsOptimized: true
+    volumeType: gp3
+    maxPodsPerNode: 737
+    iam:
+      withAddonPolicies:
+        autoScaler: true
+
+availabilityZones: ['us-east-1a', 'us-east-1b', 'us-east-1c']

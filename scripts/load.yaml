@@ -1,0 +1,58 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: curl-configmap
+  namespace: default
+data:
+  load.sh: |
+    #!/bin/sh
+    apk update
+    apk upgrade
+    apk add curl
+    while true
+    do
+      curl http://test-application.default.svc.cluster.local/cpu/
+      sleep 0.01
+    done
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: curl-application
+  namespace: default
+  labels:
+    app: curl-application
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: curl-application
+  template:
+    metadata:
+      labels:
+        app: curl-application
+    spec:
+      automountServiceAccountToken: false
+      containers:
+      - name: curl-application
+        image: alpine:3.18.0
+        imagePullPolicy: IfNotPresent
+        command: ["/usr/bin/load.sh"]
+        # command: ['sh', '-c']
+        # args: ['cat /usr/bin/load.sh']
+        volumeMounts:
+          - name: curl-volume
+            mountPath: /usr/bin/load.sh
+            subPath: load.sh
+        resources:
+          requests:
+            cpu: "150m"
+            memory: "128Mi"
+          limits:
+            cpu: "150m"
+            memory: "128Mi"
+      volumes:
+      - name: curl-volume
+        configMap:
+          name: curl-configmap
+          defaultMode: 0777
