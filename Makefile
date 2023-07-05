@@ -25,12 +25,12 @@ cluster-autoscaler:
 #	@kubectl -n kube-system annotate deployment.apps/cluster-autoscaler cluster-autoscaler.kubernetes.io/safe-to-evict="false" --overwrite
 
 # desplegando aplicacion de carga
-app:
+deploy:
 	@kubectl apply -f manifest/deployment.yaml
 	@kubectl apply -f manifest/service.yaml
 	@kubectl apply -f manifest/hpa.yaml
 
-test:
+load:
 	@kubectl apply -f scripts/load.yaml
 
 # destruyendo cluster k8s
@@ -41,4 +41,4 @@ destroy:
 	  -var="eks_version=${EKS_VERSION}" -auto-approve
 
 ekscluster:
-	eksctl create cluster -f scripts/cluster.yaml
+	eksctl delete cluster -f scripts/cluster.yaml

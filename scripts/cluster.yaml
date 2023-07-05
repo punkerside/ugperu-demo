@@ -13,7 +13,7 @@ vpc:
     publicAccess: true
     privateAccess: false
   nat:
-    gateway: HighlyAvailable
+    gateway: Single
 
 managedNodeGroups:
   - name: default
@@ -26,7 +26,7 @@ managedNodeGroups:
     volumeSize: 1024
     ebsOptimized: true
     volumeType: gp3
-    maxPodsPerNode: 737
+    maxPodsPerNode: 2048
     iam:
       withAddonPolicies:
         autoScaler: true
