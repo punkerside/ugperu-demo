@@ -5,6 +5,8 @@ metadata:
   name: ugperu-dev
   version: "1.27"
   region: us-east-1
+  tags:
+    karpenter.sh/discovery: ugperu-dev
 
 vpc:
   cidr: 10.0.0.0/16
@@ -14,6 +16,9 @@ vpc:
     privateAccess: false
   nat:
     gateway: Single
+
+iam:
+  withOIDC: true
 
 managedNodeGroups:
   - name: default
