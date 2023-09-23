@@ -18,8 +18,8 @@ components:
 
 karpenter:
 	$(eval INSTANCE_ID = $(shell aws ec2 describe-instances  --query "Reservations[*].Instances[*].{Id:InstanceId,Name:Tags[?Key=='Name']|[0].Value,Status:State.Name}" --filters Name=instance-state-name,Values=running  --region us-east-1 | jq -r .[0][0].Id))
-	$(eval PROFILE_NAME = $(shell aws ec2 describe-iam-instance-profile-associations --region us-east-1 --filters "Name=instance-id,Values=i-07f4f8f8a9bf8567c" | jq -r .IamInstanceProfileAssociations[].IamInstanceProfile.Arn | cut -d"/" -f2))
-	@kubectl create namespace karpenter
+	$(eval PROFILE_NAME = $(shell aws ec2 describe-iam-instance-profile-associations --region us-east-1 --filters "Name=instance-id,Values=${INSTANCE_ID}" | jq -r .IamInstanceProfileAssociations[].IamInstanceProfile.Arn | cut -d"/" -f2))
+#	@kubectl create namespace karpenter
 	@export NAME=${PROJECT}-${ENV}-karpenter && envsubst < k8s/service-account.yaml | kubectl apply -f -
 	@kubectl annotate serviceaccount -n karpenter ${PROJECT}-${ENV}-karpenter eks.amazonaws.com/role-arn=arn:aws:iam::$(shell aws sts get-caller-identity --query "Account" --output text):role/${PROJECT}-${ENV}-karpenter
 	@helm upgrade --install karpenter oci://public.ecr.aws/karpenter/karpenter --version v0.30.0 --namespace karpenter --create-namespace \
