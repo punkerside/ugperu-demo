@@ -42,6 +42,19 @@ spec:
             cpu: "30m"
             memory: "32Mi"
 ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: titan-app
+  namespace: default
+spec:
+  selector:
+    app: titan-app
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+---
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
@@ -61,16 +74,3 @@ spec:
       target:
         type: Utilization
         averageUtilization: 20
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: titan-app
-  namespace: default
-spec:
-  selector:
-    app: titan-app
-  ports:
-    - protocol: TCP
-      port: 80
-      targetPort: 8080

@@ -1,0 +1,22 @@
+name: Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  GIT_TOKEN: ${{ secrets.GIT_TOKEN }}
+
+jobs:
+  Pipeline:
+    name: Default
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: GitHub CLI
+      run: docker run -e GITHUB_TOKEN=${GIT_TOKEN} -e GITHUB_REPO=$(echo "${GITHUB_REPOSITORY}" | cut -d "/" -f2) punkerside/gh:latest
