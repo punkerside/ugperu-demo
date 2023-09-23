@@ -117,4 +117,4 @@ make destroy
 
 ## Authors
 
-The module is maintained by [Ivan Echegaray](https://github.com/punkerside)
+The demo is maintained by [Ivan Echegaray](https://github.com/punkerside)
