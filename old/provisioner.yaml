@@ -12,7 +12,12 @@ spec:
       values: ["c6a"]
     - key: "karpenter.k8s.aws/instance-size"
       operator: In
-      values: ["16xlarge"]
+      values: ["2xlarge"]
+    - key: "topology.kubernetes.io/zone"
+      operator: In
+      values: ["us-east-1a", "us-east-1b"]
+  kubeletConfiguration:
+    maxPods: 250
   limits:
     resources:
       cpu: 1000

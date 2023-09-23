@@ -1,49 +1,45 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: curl-configmap
+  name: titan-load
   namespace: default
 data:
-  load.sh: |
+  init.sh: |
     #!/bin/sh
-    apk update
-    apk upgrade
-    apk add curl
+    apk update && apk upgrade && apk add curl
     while true
     do
-      curl http://test-application.default.svc.cluster.local/cpu/
+      curl http://titan-app.default.svc.cluster.local/cpu/
       sleep 0.01
     done
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: curl-application
+  name: titan-load
   namespace: default
   labels:
-    app: curl-application
+    app: titan-load
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: curl-application
+      app: titan-load
   template:
     metadata:
       labels:
-        app: curl-application
+        app: titan-load
     spec:
       automountServiceAccountToken: false
       containers:
-      - name: curl-application
+      - name: titan-load
         image: alpine:3.18.0
         imagePullPolicy: IfNotPresent
-        command: ["/usr/bin/load.sh"]
-        # command: ['sh', '-c']
-        # args: ['cat /usr/bin/load.sh']
+        command: ["/usr/bin/init.sh"]
         volumeMounts:
-          - name: curl-volume
-            mountPath: /usr/bin/load.sh
-            subPath: load.sh
+          - name: titan-load
+            mountPath: /usr/bin/init.sh
+            subPath: init.sh
         resources:
           requests:
             cpu: "150m"
@@ -52,7 +48,7 @@ spec:
             cpu: "150m"
             memory: "128Mi"
       volumes:
-      - name: curl-volume
+      - name: titan-load
         configMap:
-          name: curl-configmap
+          name: titan-load
           defaultMode: 0777

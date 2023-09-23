@@ -1,7 +1,10 @@
 module "vpc" {
   source  = "punkerside/vpc/aws"
   version = "0.0.6"
-  name    = var.name
+
+  name           = var.name
+  cidr_block_pri = ["10.0.0.0/18", "10.0.64.0/18"]
+  cidr_block_pub = ["10.0.128.0/18", "10.0.192.0/18"]
 }
 
 resource "aws_ec2_tag" "elb_private" {
@@ -9,7 +12,7 @@ resource "aws_ec2_tag" "elb_private" {
   resource_id = element(module.vpc.subnet_private_ids.*.id, count.index)
   key         = "kubernetes.io/role/internal-elb"
   value       = "1"
-  depends_on = [aws_eks_node_group.main]
+  depends_on  = [aws_eks_node_group.main]
 }
 
 resource "aws_ec2_tag" "elb_public" {
@@ -17,7 +20,7 @@ resource "aws_ec2_tag" "elb_public" {
   resource_id = element(module.vpc.subnet_public_ids.*.id, count.index)
   key         = "kubernetes.io/role/elb"
   value       = "1"
-  depends_on = [aws_eks_node_group.main]
+  depends_on  = [aws_eks_node_group.main]
 }
 
 resource "aws_ec2_tag" "karpenter" {
@@ -25,7 +28,7 @@ resource "aws_ec2_tag" "karpenter" {
   resource_id = element(module.vpc.subnet_private_ids.*.id, count.index)
   key         = "karpenter.sh/discovery"
   value       = var.name
-  depends_on = [aws_eks_node_group.main]
+  depends_on  = [aws_eks_node_group.main]
 }
 
 resource "aws_iam_role" "main" {
@@ -159,7 +162,7 @@ resource "aws_eks_node_group" "main" {
   ami_type             = "AL2_x86_64"
   capacity_type        = "SPOT"
   force_update_version = false
-  instance_types       = ["c6a.16xlarge"]
+  instance_types       = ["c6a.2xlarge"]
 
   launch_template {
     name    = aws_launch_template.main.name
@@ -168,7 +171,7 @@ resource "aws_eks_node_group" "main" {
 
   scaling_config {
     desired_size = 1
-    max_size     = 20
+    max_size     = 2
     min_size     = 1
   }
 
@@ -183,19 +186,11 @@ resource "aws_eks_node_group" "main" {
   ]
 }
 
-data "tls_certificate" "main" {
-  url = aws_eks_cluster.main.identity[0].oidc[0].issuer
-}
-
 resource "aws_iam_openid_connect_provider" "main" {
   client_id_list  = ["sts.amazonaws.com"]
   thumbprint_list = [data.tls_certificate.main.certificates[0].sha1_fingerprint]
   url             = aws_eks_cluster.main.identity.0.oidc.0.issuer
 }
-
-
-data "aws_caller_identity" "main" {}
-data "aws_region" "main" {}
 
 resource "aws_iam_role" "karpenter" {
   name               = "${var.name}-karpenter"
@@ -242,4 +237,11 @@ resource "aws_iam_role_policy" "karpenter" {
   ]
 }
 EOF
+}
+
+resource "aws_ec2_tag" "security_group" {
+  resource_id = data.aws_security_group.main.id
+  key         = "karpenter.sh/discovery"
+  value       = var.name
+  depends_on = [aws_eks_node_group.main]
 }

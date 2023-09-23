@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: titan-app
+  namespace: default
+  labels:
+    app: titan-app
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: titan-app
+  template:
+    metadata:
+      labels:
+        app: titan-app
+    spec:
+      automountServiceAccountToken: false
+      containers:
+      - name: titan-app
+        image: punkerside/titan-image-load:5100688419
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 3
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 3
+        resources:
+          requests:
+            cpu: "30m"
+            memory: "32Mi"
+          limits:
+            cpu: "30m"
+            memory: "32Mi"
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: titan-app
+  namespace: default
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: titan-app
+  minReplicas: 1
+  maxReplicas: 10001
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 20
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: titan-app
+  namespace: default
+spec:
+  selector:
+    app: titan-app
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
